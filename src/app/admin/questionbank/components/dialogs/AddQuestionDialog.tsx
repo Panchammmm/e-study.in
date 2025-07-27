@@ -1,17 +1,19 @@
 'use client';
 
 import React from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { QuestionFormState } from '../../types';
+import { RefreshCw } from 'lucide-react';
+import { QuestionForm } from '../forms/QuestionForm';
+import { CreateQuestionRequest } from '@/constants/types';
 
 interface AddQuestionDialogProps {
   isOpen: boolean;
   isCreating: boolean;
-  newQuestion: QuestionFormState;
+  newQuestion: CreateQuestionRequest;
   onClose: () => void;
-  onSubmit: () => Promise<boolean>;
-  onQuestionChange: (question: QuestionFormState) => void;
+  onSubmit: () => Promise<void>;
+  onQuestionChange: (question: CreateQuestionRequest) => void;
 }
 
 export const AddQuestionDialog: React.FC<AddQuestionDialogProps> = ({
@@ -23,9 +25,11 @@ export const AddQuestionDialog: React.FC<AddQuestionDialogProps> = ({
   onQuestionChange
 }) => {
   const handleSubmit = async () => {
-    const success = await onSubmit();
-    if (success) {
+    try {
+      await onSubmit();
       onClose();
+    } catch (error) {
+      console.error('Failed to add question:', error);
     }
   };
 
@@ -40,15 +44,12 @@ export const AddQuestionDialog: React.FC<AddQuestionDialogProps> = ({
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* TODO: Implement QuestionForm component */}
-          <div className="p-4 border rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              Question form component will be implemented here...
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Current question: {JSON.stringify(newQuestion, null, 2)}
-            </p>
-          </div>
+          <QuestionForm
+            question={newQuestion}
+            onChange={onQuestionChange}
+            isSubmitting={isCreating}
+            onSubmit={handleSubmit}
+          />
           
           <div className="flex justify-end space-x-2">
             <Button 
@@ -64,7 +65,14 @@ export const AddQuestionDialog: React.FC<AddQuestionDialogProps> = ({
               disabled={isCreating}
               className="cursor-pointer"
             >
-              {isCreating ? 'Creating...' : 'Add Question'}
+              {isCreating ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                'Add Question'
+              )}
             </Button>
           </div>
         </div>

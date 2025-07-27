@@ -24,7 +24,7 @@ export const DEFAULT_NEW_QUESTION: CreateQuestionRequest = {
   correctOption: 0,
 
   // Marking system defaults
-  positiveMarks: 4,
+  positiveMarks: 1,
   negativeMarks: 1,
 
   // Explanation system defaults

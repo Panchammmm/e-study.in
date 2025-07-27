@@ -28,7 +28,7 @@ import {
 // Import stores and other utilities
 import { useExamStore } from '@/store/slices/examStore';
 import { useUIStore } from '@/store/slices/uiStore';
-import EnhancedQuestionBank from '../questionbank/EnhancedQuestionBank';
+import QuestionBankRefactored from '../questionbank/QuestionBankRefactored';
 
 // Dynamic imports for heavy components
 const EnhancedExamBuilder = dynamic(() => import('../exam/create/EnhancedExamBuilder'), { ssr: false });
@@ -134,7 +134,7 @@ const AdminDashboard: React.FC = () => {
   // This need to be reconsider based on the actual question bank component
   
   if (showQuestionBank) {
-    return <EnhancedQuestionBank onBack={handleBackFromQuestionBank} />;
+    return <QuestionBankRefactored onBack={handleBackFromQuestionBank} />;
   }
 
   if (showAddQuestionsDemo) {

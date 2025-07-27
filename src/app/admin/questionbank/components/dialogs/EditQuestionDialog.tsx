@@ -3,7 +3,9 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Question } from '@/constants/types';
+import { RefreshCw } from 'lucide-react';
+import { QuestionForm } from '../forms/QuestionForm';
+import { Question, CreateQuestionRequest } from '@/constants/types';
 
 interface EditQuestionDialogProps {
   isOpen: boolean;
@@ -11,7 +13,7 @@ interface EditQuestionDialogProps {
   question: Question | null;
   onClose: () => void;
   onSubmit: (question: Question) => Promise<boolean>;
-  onQuestionChange: (question: Question | null) => void;
+  onQuestionChange: (question: Question | CreateQuestionRequest) => void;
 }
 
 export const EditQuestionDialog: React.FC<EditQuestionDialogProps> = ({
@@ -43,15 +45,13 @@ export const EditQuestionDialog: React.FC<EditQuestionDialogProps> = ({
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* TODO: Implement QuestionForm component */}
-          <div className="p-4 border rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              Question edit form component will be implemented here...
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Current question: {question?.content}
-            </p>
-          </div>
+          <QuestionForm
+            question={question}
+            onChange={onQuestionChange}
+            isSubmitting={isUpdating}
+            onSubmit={handleSubmit}
+            isEditMode={true}
+          />
           
           <div className="flex justify-end space-x-2">
             <Button 
@@ -67,7 +67,14 @@ export const EditQuestionDialog: React.FC<EditQuestionDialogProps> = ({
               disabled={isUpdating}
               className="cursor-pointer"
             >
-              {isUpdating ? 'Updating...' : 'Update Question'}
+              {isUpdating ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Update Question'
+              )}
             </Button>
           </div>
         </div>
