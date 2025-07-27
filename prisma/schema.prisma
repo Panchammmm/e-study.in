@@ -18,6 +18,7 @@ model User {
   id String @id @default(uuid())
   email String @unique
   name String @default("Anonymous")
+  phoneNumber String?
   role Role @default(USER)
   password String
   createdAt DateTime @default(now())
@@ -42,25 +43,87 @@ enum Role {
   MODERATOR
 }
 
+// model Question {
+//   id String @id @default(uuid())
+//   content String
+//   questionImage String? // Optional image for the question
+//   options String[] // Array of options
+//   optionImages String[] @default([]) // Array of option images
+//   correctOption Int
+//   difficulty Difficulty @default(MEDIUM)
+//   subject String
+//   topic String
+//   tags String[] // Array of tags
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   author User @relation(fields: [authorId], references: [id])
+//   authorId String
+//   examSections ExamSectionQuestion[]
+//   exams ExamQuestion[]
+//   questionStatuses QuestionStatus[]
+// }
+
+enum LayerType {
+  none
+  text
+  image
+}
+
+enum ExplanationType {
+  none
+  text
+  image
+}
+
 model Question {
-  id String @id @default(uuid())
-  content String
-  questionImage String? // Optional image for the question
-  options String[] // Array of options
-  optionImages String[] @default([]) // Array of option images
-  correctOption Int
-  difficulty Difficulty @default(MEDIUM)
-  subject String
-  topic String
-  tags String[] // Array of tags
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  author User @relation(fields: [authorId], references: [id])
-  authorId String
-  examSections ExamSectionQuestion[]
-  exams ExamQuestion[]
+  id              String   @id @default(uuid())
+  content         String
+  questionImage   String?               // Optional image for the question
+
+  // Options
+  options         String[]              // Array of options
+  optionImages    String[] @default([]) // Array of option images
+  optionTypes     String[] @default([]) // Option types ('text' | 'image')
+  correctOption   Int
+
+  // 3-Layer system
+  layer1Type      LayerType @default(none)
+  layer1Text      String    @default("")
+  layer1Image     String    @default("")
+  layer2Type      LayerType @default(none)
+  layer2Text      String    @default("")
+  layer2Image     String    @default("")
+  layer3Type      LayerType @default(none)
+  layer3Text      String    @default("")
+  layer3Image     String    @default("")
+
+  // Marking system
+  positiveMarks   Float     @default(1.0)
+  negativeMarks   Float     @default(1.0)
+
+  // Explanation system
+  explanationType ExplanationType @default(none)
+  explanationText String    @default("")
+  explanationImage String   @default("")
+
+  // Metadata
+  difficulty      Difficulty @default(MEDIUM)
+  subject         String
+  topic           String
+  tags            String[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  author          User      @relation(fields: [authorId], references: [id])
+  authorId        String
+  examSections    ExamSectionQuestion[]
+  exams           ExamQuestion[]
   questionStatuses QuestionStatus[]
 }
+
+
 
 model ExamSection {
   id String @id @default(uuid())

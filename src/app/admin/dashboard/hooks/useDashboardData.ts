@@ -50,7 +50,7 @@ export const useDashboardData = () => {
         console.log(`✅ ${filter} Exams API Response:`, examResult);
         const examData = examResult as { data: { exams: Exam[] } };
         const examsArray = examData.data?.exams || [];
-        
+
         let filteredExams = examsArray;
         
         if (filter === 'draft') {
@@ -85,7 +85,7 @@ export const useDashboardData = () => {
         console.log('🔄 Loading admin dashboard data...');
         
         const [examResult, questionResult, usersResult, statsResult] = await Promise.allSettled([
-          examsApi.getAllExams({ page: 1, limit: 100, published: false }),
+          examsApi.getAllExams({ page: 1, limit: 100 }),
           questionsApi.getAllQuestions({ page: 1, limit: 100 }),
           usersApi.getAllUsers({ page: 1, limit: 50 }),
           adminApi.getDashboardStats()

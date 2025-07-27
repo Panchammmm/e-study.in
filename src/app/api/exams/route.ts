@@ -22,7 +22,7 @@ const createExamSchema = z.object({
 const querySchema = z.object({
   page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1),
   limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 20),
-  published: z.string().optional().transform((val) => val === 'true'),
+  published: z.string().optional().transform((val) => val === 'true' ? true : val === 'false' ? false : undefined),
   search: z.string().optional(),
   sortBy: z.enum(['createdAt', 'updatedAt', 'name']).optional().default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),

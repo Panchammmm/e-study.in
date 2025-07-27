@@ -29,6 +29,7 @@ import {
 import { useExamStore } from '@/store/slices/examStore';
 import { useUIStore } from '@/store/slices/uiStore';
 import QuestionBankRefactored from '../questionbank/QuestionBankRefactored';
+import { useRouter } from 'next/navigation';
 
 // Dynamic imports for heavy components
 const EnhancedExamBuilder = dynamic(() => import('../exam/create/EnhancedExamBuilder'), { ssr: false });
@@ -37,6 +38,8 @@ const AddQuestionsDemo = dynamic(() => import('../exam/components/AddQuestionsDe
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const examsApi = useExams();
+  const router = useRouter();
+
   
   // Store hooks for clearing exam data
   const clearExamForEdit = useExamStore((state) => state.clearExamForEdit);
@@ -145,7 +148,7 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
-        onQuestionBankClick={() => setShowQuestionBank(true)}
+        onQuestionBankClick={() => router.push('/admin/questionbank')}
         onRankingsClick={() => {
           import('@/hooks/use-toast').then(({ toast }) => {
             toast({

@@ -298,6 +298,7 @@ const LoginPage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <form onSubmit={handleSignUp} className="space-y-4">
+                    
                     {/* Email */}
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
