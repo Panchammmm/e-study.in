@@ -1,3 +1,4 @@
+'use client';
 import { useCallback, useState } from 'react';
 import { 
   authService, 
@@ -75,7 +76,7 @@ export function useAuth() {
     return api.execute(() => authService.login({ email, password }));
   }, [api]);
 
-  const signup = useCallback(async (data: { email: string; password: string }) => {
+  const signup = useCallback(async (data: { name: string; email: string; password: string; phoneNumber: string }) => {
     return api.execute(() => authService.signup(data));
   }, [api]);
 

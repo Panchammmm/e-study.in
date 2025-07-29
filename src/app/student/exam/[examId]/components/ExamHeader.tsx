@@ -1,8 +1,7 @@
 import React from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Coffee, ArrowLeft } from "lucide-react";
+import { Clock, Coffee } from "lucide-react";
 import { ExamHeaderProps } from "../types";
 
 const ExamHeader: React.FC<ExamHeaderProps> = ({
@@ -17,37 +16,13 @@ const ExamHeader: React.FC<ExamHeaderProps> = ({
   getTimeColor,
   formatTime,
 }) => {
-  const router = useRouter();
-
-  const handleBackToDashboard = () => {
-    // Show confirmation dialog if exam is in progress
-    if (examStarted && timeLeft > 0) {
-      const confirmLeave = window.confirm(
-        "Are you sure you want to leave the exam? Your progress will be lost."
-      );
-      if (!confirmLeave) return;
-    }
-    
-    router.push('/student/dashboard');
-  };
-
   if (!exam) return null;
 
   return (
     <header className="bg-white shadow-md border-b sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBackToDashboard}
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <div className="h-6 w-px bg-gray-300"></div>
+          <div className="flex items-center">
             <h1 className="text-xl font-bold text-gray-900">
               {exam.name}
             </h1>

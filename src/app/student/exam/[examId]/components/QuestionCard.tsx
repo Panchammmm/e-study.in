@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Bookmark, X } from "lucide-react";
+import { Bookmark, X, ZoomIn } from "lucide-react";
 import { QuestionCardProps } from "../types";
 import { getTotalQuestions } from "../utils/examHelpers";
 
@@ -110,21 +110,51 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             {question.content}
           </div>
 
-          {/* Question Image - Simplified approach */}
+          {/* Question Image - Enhanced for better visibility */}
           {question.questionImage && (
-            <div className="flex justify-center">
-              <div className="relative max-w-full max-h-96 overflow-hidden rounded-lg border shadow-sm">
-                <Image
-                  src={question.questionImage}
-                  alt="Question illustration"
-                  width={800}
-                  height={400}
-                  className="w-auto h-auto max-w-full max-h-96 object-contain"
-                  onClick={() => setSelectedImagePreview(question.questionImage ?? null)}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600 flex items-center">
+                <ZoomIn className="h-4 w-4 mr-1" />
+                Click on the image to view in full size
+              </p>
+              <div className="flex justify-center">
+                <div className="relative max-w-full bg-white rounded-lg border-2 border-gray-300 shadow-sm overflow-hidden">
+                  <div 
+                    className="relative cursor-pointer group min-h-[200px] flex items-center justify-center"
+                    onClick={() => question.questionImage && setSelectedImagePreview(question.questionImage)}
+                  >
+                    <Image
+                      src={question.questionImage}
+                      alt="Question illustration"
+                      width={800}
+                      height={600}
+                      className="w-full h-auto max-h-[400px] object-contain hover:scale-105 transition-transform duration-200"
+                      unoptimized={true}
+                      onError={(e) => {
+                        console.error('Failed to load question image:', question.questionImage);
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.style.display = 'none';
+                        // Show fallback
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="flex flex-col items-center justify-center h-48 text-gray-500">
+                              <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                              </svg>
+                              <p class="text-sm">Image failed to load</p>
+                              <p class="text-xs text-gray-400 mt-1">URL: ${question.questionImage}</p>
+                            </div>
+                          `;
+                        }
+                      }}
+                    />
+                    {/* Zoom overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                      <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -177,10 +207,10 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                     className="flex-1 cursor-pointer flex items-center space-x-4"
                   >
                     <span className="flex-1 text-base">{option}</span>
-                    {/* Option Image - Simplified approach */}
+                    {/* Option Image - Enhanced for better visibility */}
                     {question.optionImages && question.optionImages[index] && (
                       <div 
-                        className="relative h-16 w-16 overflow-hidden rounded border cursor-pointer"
+                        className="relative h-32 w-32 overflow-hidden rounded-lg border-2 border-gray-300 bg-white cursor-pointer group flex-shrink-0 flex items-center justify-center"
                         onClick={(e) => {
                           e.preventDefault();
                           if (question.optionImages?.[index]) {
@@ -191,13 +221,32 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                         <Image
                           src={question.optionImages[index]}
                           alt={`Option ${index + 1} illustration`}
-                          width={64}
-                          height={64}
-                          className="h-16 w-16 object-cover"
+                          width={128}
+                          height={128}
+                          className="h-32 w-32 object-contain group-hover:scale-110 transition-transform duration-200"
+                          unoptimized={true}
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none';
+                            console.error('Failed to load option image:', question.optionImages?.[index]);
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.style.display = 'none';
+                            // Show fallback
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="flex flex-col items-center justify-center h-32 w-32 text-gray-500 bg-gray-50">
+                                  <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                  </svg>
+                                  <p class="text-xs">Image not available</p>
+                                </div>
+                              `;
+                            }
                           }}
                         />
+                        {/* Zoom indicator */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                          <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-5 w-5" />
+                        </div>
                       </div>
                     )}
                   </Label>
@@ -220,6 +269,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                     width={1200}
                     height={800}
                     className="w-auto h-auto max-w-full max-h-[80vh] object-contain"
+                    unoptimized={true}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
