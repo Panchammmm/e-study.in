@@ -82,27 +82,6 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        {/* Temporary Debug Section - Remove this after fixing the image issue */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs">
-            <p className="font-semibold text-yellow-800 mb-2">Debug Info (Dev Mode Only):</p>
-            {question.questionImage && (
-              <p className="text-yellow-700 break-all">
-                <strong>Question Image URL:</strong> {question.questionImage}
-              </p>
-            )}
-            {question.optionImages && question.optionImages.some(img => img) && (
-              <div className="text-yellow-700">
-                <strong>Option Images:</strong>
-                <ul className="ml-4 mt-1">
-                  {question.optionImages.map((img, idx) => img && (
-                    <li key={idx} className="break-all">Option {idx + 1}: {img}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="space-y-6">
           {/* Question Text */}
