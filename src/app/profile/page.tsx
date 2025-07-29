@@ -33,7 +33,7 @@ const ProfilePage = () => {
       <div className="max-w-3xl mx-auto">
         <Button 
           variant="ghost" 
-          onClick={() => router.back()}
+          onClick={() => user.role === 'ADMIN' ? router.push('/admin/dashboard') : router.push('/student/dashboard')}
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

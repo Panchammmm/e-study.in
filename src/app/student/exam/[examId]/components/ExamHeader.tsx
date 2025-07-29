@@ -1,9 +1,10 @@
 "use client";
+import React from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Coffee } from "lucide-react";
+import { Clock, Coffee, ArrowLeft } from "lucide-react";
 import { ExamHeaderProps } from "../types";
-import { useRouter } from "next/navigation";
 
 const ExamHeader: React.FC<ExamHeaderProps> = ({
   exam,
@@ -18,13 +19,20 @@ const ExamHeader: React.FC<ExamHeaderProps> = ({
   formatTime,
 }) => {
   const router = useRouter();
-  if (!exam) return null;
 
   const handleBackToDashboard = () => {
-    const confirmed = window.confirm("Are you sure you want to go back to the dashboard?");
-    if (!confirmed) return;
-    router.push("/student/dashboard");
-  }
+    // Show confirmation dialog if exam is in progress
+    if (examStarted && timeLeft > 0) {
+      const confirmLeave = window.confirm(
+        "Are you sure you want to leave the exam? Your progress will be lost."
+      );
+      if (!confirmLeave) return;
+    }
+    
+    router.push('/student/dashboard');
+  };
+
+  if (!exam) return null;
 
 
   return (
@@ -32,23 +40,17 @@ const ExamHeader: React.FC<ExamHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-4">
             <Button
-            variant="ghost"
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors"
-            onClick={()=> handleBackToDashboard()}
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToDashboard}
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
             >
-            <svg
-              className="h-5 w-5 mr-1"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="font-semibold">Back to Dashboard</span>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
             </Button>
-          <div className="flex items-center flex-wrap space-x-4">
+            <div className="h-6 w-px bg-gray-300"></div>
             <h1 className="text-xl font-bold text-gray-900">
               {exam.name}
             </h1>
