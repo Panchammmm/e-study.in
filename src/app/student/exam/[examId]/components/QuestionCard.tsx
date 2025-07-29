@@ -150,7 +150,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                       }}
                     />
                     {/* Zoom overlay */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                    <div className="absolute inset-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
                       <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8" />
                     </div>
                   </div>
@@ -244,7 +244,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                           }}
                         />
                         {/* Zoom indicator */}
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                        <div className="absolute inset-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
                           <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-5 w-5" />
                         </div>
                       </div>
