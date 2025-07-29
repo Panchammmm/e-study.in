@@ -72,16 +72,38 @@ const ExamInterface: React.FC<ExamInterfaceProps> = ({ examId }) => {
   // Check if it's first/last question for navigation
   const isFirstQuestion = navigationState.currentSectionIndex === 0 && navigationState.currentQuestionIndex === 0;
   
-  let isLastQuestion = false;
-  if (examData.hasMultipleSections && examData.exam.sections) {
-    const isLastSection = navigationState.currentSectionIndex === examData.exam.sections.length - 1;
-    const currentSectionQuestions = currentSection?.questions?.length || 0;
-    const isLastQuestionInSection = navigationState.currentQuestionIndex === currentSectionQuestions - 1;
-    isLastQuestion = isLastSection && isLastQuestionInSection;
-  } else {
-    const totalDirectQuestions = examData.exam.questions?.length || 0;
-    isLastQuestion = navigationState.currentQuestionIndex === totalDirectQuestions - 1;
-  }
+  // Calculate if this is the last question across the entire exam
+  const isLastQuestion = (() => {
+    if (!examData.exam) return false;
+
+    // Calculate global position across all questions
+    let currentGlobalIndex = 0;
+
+    // If exam has sections, calculate position across all sections
+    if (examData.exam.sections && examData.exam.sections.length > 0) {
+      for (let sectionIdx = 0; sectionIdx < examData.exam.sections.length; sectionIdx++) {
+        const section = examData.exam.sections[sectionIdx];
+        const sectionQuestionsLength = section.questions?.length || 0;
+        
+        if (sectionIdx < navigationState.currentSectionIndex) {
+          // Add all questions from previous sections
+          currentGlobalIndex += sectionQuestionsLength;
+        } else if (sectionIdx === navigationState.currentSectionIndex) {
+          // Add current question index within current section
+          currentGlobalIndex += navigationState.currentQuestionIndex;
+          break;
+        }
+      }
+      
+      // Total questions across all sections
+      const totalQuestions = examData.totalQuestions;
+      return currentGlobalIndex === totalQuestions - 1;
+    }
+
+    // If no sections, check direct questions
+    const questionsLength = examData.exam.questions?.length || 0;
+    return questionsLength > 0 && navigationState.currentQuestionIndex === questionsLength - 1;
+  })();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -149,6 +171,7 @@ const ExamInterface: React.FC<ExamInterfaceProps> = ({ examId }) => {
                   answer={navigationState.answers[currentQuestion?.id || '']}
                   questionStatus={navigationState.questionStatuses[currentQuestion?.id || '']}
                   onAnswerChange={examActions.handleAnswerChange}
+                  exam={examData.exam}
                 />
 
                 {/* Navigation Controls */}

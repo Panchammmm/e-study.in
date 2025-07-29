@@ -76,6 +76,7 @@ export interface QuestionCardProps {
   answer: number | undefined;
   questionStatus: QuestionAnswerStatus | undefined;
   onAnswerChange: (questionId: string, answerIndex: number) => void;
+  exam: Exam | null;
 }
 
 export interface NavigationControlsProps {

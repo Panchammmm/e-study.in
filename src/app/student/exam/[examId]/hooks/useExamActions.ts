@@ -56,21 +56,43 @@ export const useExamActions = ({
   }, [uiState.password, examPassword, setUiState, setTimerState]);
 
   const handleAnswerChange = useCallback((questionId: string, answerIndex: number) => {
-    setNavigationState(prev => ({
-      ...prev,
-      answers: {
-        ...prev.answers,
-        [questionId]: answerIndex,
-      },
-      questionStatuses: {
-        ...prev.questionStatuses,
-        [questionId]: {
-          ...prev.questionStatuses[questionId],
-          status: "ANSWERED",
-          answer: answerIndex,
+    setNavigationState(prev => {
+      // Handle clearing answer (answerIndex -1 means clear)
+      if (answerIndex === -1) {
+        const newAnswers = { ...prev.answers };
+        delete newAnswers[questionId];
+        
+        return {
+          ...prev,
+          answers: newAnswers,
+          questionStatuses: {
+            ...prev.questionStatuses,
+            [questionId]: {
+              ...prev.questionStatuses[questionId],
+              status: "NOT_ANSWERED",
+              answer: undefined,
+            },
+          },
+        };
+      }
+
+      // Handle normal answer selection
+      return {
+        ...prev,
+        answers: {
+          ...prev.answers,
+          [questionId]: answerIndex,
         },
-      },
-    }));
+        questionStatuses: {
+          ...prev.questionStatuses,
+          [questionId]: {
+            ...prev.questionStatuses[questionId],
+            status: "ANSWERED",
+            answer: answerIndex,
+          },
+        },
+      };
+    });
   }, [setNavigationState]);
 
   const handleMarkForReview = useCallback((questionId: string) => {
