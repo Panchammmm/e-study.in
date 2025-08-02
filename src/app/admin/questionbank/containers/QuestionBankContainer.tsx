@@ -20,16 +20,17 @@ import {
   useQuestionFilters,
   useStoreInitialization
 } from '@/store';
-import MathDisplay from '../../../../components/math-display';
+import SafeMathDisplay from '../../../../components/SafeMathDisplay';
 import QuestionPreviewDialog from '../../exam/components/QuestionPreviewDialog';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { QuestionCard } from './QuestionCard';
 import { QuestionBankHeader } from './QuestionBankHeader';
+import { Pagination } from '../components/Pagination';
 // ✅ NEW: Import the new dialog components
 import { AddQuestionDialog } from './AddQuestionDialog';
 import { EditQuestionDialog } from './EditQuestionDialog';
 
-import { useQuestions } from '@/hooks/useApiServices' 
+import { useQuestions } from '@/hooks/useApiServices'
 import { useRouter } from 'next/navigation';
 import { useQuestionsContextData } from '@/context/QuestionContext';
 import type { QuestionsListApiResponse } from '@/app/admin/questionbank/types/QuestionTypes.d.ts';
@@ -51,21 +52,21 @@ const BulkUploadForm = ({ onUpload }: { onUpload: (file: File) => void }) => {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      
+
       if (!Array.isArray(data)) {
         throw new Error('File must contain an array of questions');
       }
-      
+
       if (data.length === 0) {
         throw new Error('File is empty');
       }
-      
+
       toast({
         title: 'File Valid',
         description: `Found ${data.length} questions in file`,
         variant: 'default'
       });
-      
+
     } catch (error) {
       console.error('File validation error:', error);
       toast({
@@ -135,7 +136,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
 
   // Store hooks
   // const questions:Question[] = useQuestionFrom();
-  const { questions, questionApiResponse, setQuestions, fetchQuestionData, loading } = useQuestionsContextData();
+  const { questions, questionApiResponse, setQuestions, fetchQuestionData, fetchFilterOptions, loading } = useQuestionsContextData();
 
   const questionsAPI = useQuestions()
   const filteredQuestions = useFilteredQuestions();
@@ -159,13 +160,17 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>(preSelectedQuestions);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingPage, setIsLoadingPage] = useState(false);
+
   // Tag filtering state
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagSearchTerm, setTagSearchTerm] = useState('');
 
   // Checking Data
-  console.log('From QB editingQuestion',editingQuestion)
-  console.log('From QB isUpdating',isUpdating)
+  console.log('From QB editingQuestion', editingQuestion)
+  console.log('From QB isUpdating', isUpdating)
 
 
 
@@ -199,12 +204,26 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
 
   const [newQuestion, setNewQuestion] = useState<CreateQuestionRequest>(defaultQuestion);
 
-  // Memoized derived data - only recalculate when questions change
-  const derivedData = useMemo(() => ({
-    subjects: [...new Set(questions?.map(q => q.subject))].filter(Boolean).sort(),
-    topics: [...new Set(questions?.map(q => q.topic))].filter(Boolean).sort(),
-    allTags: [...new Set(questions?.flatMap(q => q.tags || []))].filter(Boolean).sort()
-  }), [questions]);
+  // ✅ UPDATED: Use filter metadata from API response instead of deriving from current page
+  const derivedData = useMemo(() => {
+    const filterMetadata = questionApiResponse?.data?.filterMetadata;
+
+    if (filterMetadata) {
+      // Use complete filter data from API
+      return {
+        subjects: filterMetadata.subjects || [],
+        topics: filterMetadata.topics || [],
+        allTags: filterMetadata.tags || []
+      };
+    }
+
+    // Fallback to deriving from current questions if filterMetadata is not available
+    return {
+      subjects: [...new Set(questions?.map(q => q.subject))].filter(Boolean).sort(),
+      topics: [...new Set(questions?.map(q => q.topic))].filter(Boolean).sort(),
+      allTags: [...new Set(questions?.flatMap(q => q.tags || []))].filter(Boolean).sort()
+    };
+  }, [questionApiResponse?.data?.filterMetadata, questions]);
 
   // Filtered tags for search functionality
   const filteredTagsForDisplay = useMemo(() => {
@@ -217,9 +236,9 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
   // Client-side tag filtering combined with store filtering
   const tagFilteredQuestions = useMemo(() => {
     if (selectedTags?.length === 0) return filteredQuestions;
-    
+
     return filteredQuestions.filter(question => {
-      return selectedTags.some(selectedTag => 
+      return selectedTags.some(selectedTag =>
         question.tags && question.tags.includes(selectedTag)
       );
     });
@@ -256,41 +275,41 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
       </div>
     );
 
-    // Layer rendering logic...
-    if (question.layer1Type === 'text' && question.layer1Text?.trim()) {
+    // Layer rendering logic with robust null/undefined checking
+    if (question.layer1Type === 'text' && question.layer1Text && typeof question.layer1Text === 'string' && question.layer1Text.trim()) {
       layers.push(
         <div key="layer1" className="mb-2">
-          <MathDisplay>{question.layer1Text}</MathDisplay>
+          <SafeMathDisplay>{question.layer1Text}</SafeMathDisplay>
         </div>
       );
-    } else if (question.layer1Type === 'image' && question.layer1Image?.trim()) {
+    } else if (question.layer1Type === 'image' && question.layer1Image && typeof question.layer1Image === 'string' && question.layer1Image.trim()) {
       layers.push(renderImage(question.layer1Image, "Question layer 1", "layer1"));
     }
 
-    if (question.layer2Type === 'text' && question.layer2Text?.trim()) {
+    if (question.layer2Type === 'text' && question.layer2Text && typeof question.layer2Text === 'string' && question.layer2Text.trim()) {
       layers.push(
         <div key="layer2" className="mb-2">
-          <MathDisplay>{question.layer2Text}</MathDisplay>
+          <SafeMathDisplay>{question.layer2Text}</SafeMathDisplay>
         </div>
       );
-    } else if (question.layer2Type === 'image' && question.layer2Image?.trim()) {
+    } else if (question.layer2Type === 'image' && question.layer2Image && typeof question.layer2Image === 'string' && question.layer2Image.trim()) {
       layers.push(renderImage(question.layer2Image, "Question layer 2", "layer2"));
     }
 
-    if (question.layer3Type === 'text' && question.layer3Text?.trim()) {
+    if (question.layer3Type === 'text' && question.layer3Text && typeof question.layer3Text === 'string' && question.layer3Text.trim()) {
       layers.push(
         <div key="layer3" className="mb-2">
-          <MathDisplay>{question.layer3Text}</MathDisplay>
+          <SafeMathDisplay>{question.layer3Text}</SafeMathDisplay>
         </div>
       );
-    } else if (question.layer3Type === 'image' && question.layer3Image?.trim()) {
+    } else if (question.layer3Type === 'image' && question.layer3Image && typeof question.layer3Image === 'string' && question.layer3Image.trim()) {
       layers.push(renderImage(question.layer3Image, "Question layer 3", "layer3"));
     }
 
-    if (layers?.length === 0 && question.content?.trim()) {
+    if (layers?.length === 0 && question.content && typeof question.content === 'string' && question.content.trim()) {
       layers.push(
         <div key="legacy" className="mb-2">
-          <MathDisplay>{question.content}</MathDisplay>
+          <SafeMathDisplay>{question.content}</SafeMathDisplay>
         </div>
       );
     }
@@ -302,54 +321,111 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
     return layers?.length > 0 ? layers : <span className="text-gray-500 italic">No content available</span>;
   }, []);
 
-  // Effects
+  // ✅ NEW: Search state managed locally, not through store
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // ✅ NEW: Local filter state instead of store
+  const [localFilters, setLocalFilters] = useState({
+    subject: '',
+    topic: '',
+    difficulty: ''
+  });
+
+
+
+  // ✅ FIXED: Search effect that works directly with context
   useEffect(() => {
-    if (searchText === filters.search) return;
+    if (searchText === searchQuery) return;
+
+    console.log('🔍 Search text changed:', searchText); // Debug log
 
     setIsSearching(true);
-    const timeout = setTimeout(async () => {
-      try {
-        await setFilters({ ...filters, search: searchText.trim() });
-      } catch (error) {
-        console.error('Filter error:', error);
-      } finally {
-        setIsSearching(false);
-      }
+    const timeout = setTimeout(() => {
+      setSearchQuery(searchText.trim());
+      setCurrentPage(1); // Reset to first page when search changes
+      setIsSearching(false);
     }, 400);
 
     return () => {
       clearTimeout(timeout);
     };
-  }, [searchText, filters, setFilters]);
+  }, [searchQuery, searchText]);
 
+  // Initial data fetch
   useEffect(() => {
-    if (filters.search !== searchText) {
-      setSearchText(filters.search || '');
-    }
-  }, [filters.search, searchText]);
+    // Fetch initial data when component mounts
+    const initialFetch = async () => {
+      try {
+        await fetchQuestionData({ page: 1, limit: 20 });
+      } catch (error) {
+        console.error('Failed to fetch initial questions:', error);
+      }
+    };
 
+    initialFetch();
+  }, [fetchQuestionData]);
+
+  // ✅ FIXED: Fetch questions with pagination using NEW context only
   useEffect(() => {
-    fetchQuestions().catch(console.error);
-  }, [fetchQuestions]);
+    const fetchQuestionsWithPagination = async () => {
+      try {
+        setIsLoadingPage(true);
+
+        const params = {
+          page: currentPage,
+          limit: 20,
+          ...(searchQuery && { search: searchQuery }),
+          ...(localFilters.difficulty && { difficulty: localFilters.difficulty as 'EASY' | 'MEDIUM' | 'HARD' }),
+          ...(localFilters.subject && { subject: localFilters.subject }),
+          ...(localFilters.topic && { topic: localFilters.topic }),
+          ...(selectedTags.length > 0 && { tags: selectedTags.join(',') })
+        };
+
+        console.log('🔍 Fetching questions with params:', params); // Debug log
+
+        await fetchQuestionData(params);
+      } catch (error) {
+        console.error('Failed to fetch questions:', error);
+      } finally {
+        setIsLoadingPage(false);
+      }
+    };
+
+    fetchQuestionsWithPagination();
+  }, [currentPage, searchQuery, localFilters, selectedTags, fetchQuestionData]);
 
   // Tag filtering handlers
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags(prev => {
-      if (prev.includes(tag)) {
-        return prev.filter(t => t !== tag);
-      } else {
-        return [...prev, tag];
-      }
+      const newTags = prev.includes(tag)
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag];
+
+      // Reset to page 1 when tags change
+      setCurrentPage(1);
+
+      return newTags;
     });
   }, []);
 
   const removeTag = useCallback((tag: string) => {
     setSelectedTags(prev => prev.filter(t => t !== tag));
+    // Reset to page 1 when tags change
+    setCurrentPage(1);
   }, []);
 
   const clearAllTags = useCallback(() => {
     setSelectedTags([]);
     setTagSearchTerm('');
+    // Reset to page 1 when clearing tags
+    setCurrentPage(1);
+  }, []);
+
+  // Pagination handler
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    // Scroll to top when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   // Handlers
@@ -357,26 +433,22 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
     setSearchText(value);
   }, []);
 
-  const handleFilterChange = useCallback(async (key: string, value: string) => {
-    const filterValue = value === 'ALL' ? '' : value;
-    const newFilters = { ...filters, [key]: filterValue };
-    try {
-      await setFilters(newFilters);
-    } catch (error) {
-      console.error('Filter change error:', error);
-    }
-  }, [filters, setFilters]);
 
-  const clearFilters = useCallback(async () => {
-    try {
-      await resetFilters();
-      setSearchText('');
-      setSelectedTags([]);
-      setTagSearchTerm('');
-    } catch (error) {
-      console.error('Clear filters error:', error);
-    }
-  }, [resetFilters]);
+
+  const handleFilterChange = useCallback((key: string, value: string) => {
+    const filterValue = value === 'ALL' ? '' : value;
+    setLocalFilters(prev => ({ ...prev, [key]: filterValue }));
+    setCurrentPage(1); // Reset to first page when filters change
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setSearchText('');
+    setSearchQuery('');
+    setLocalFilters({ subject: '', topic: '', difficulty: '' });
+    setSelectedTags([]);
+    setTagSearchTerm('');
+    setCurrentPage(1); // Reset to first page when clearing filters
+  }, []);
 
   const toggleSelection = useCallback((questionId: string) => {
     if (!multiSelect) {
@@ -388,13 +460,13 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
       }
       return;
     }
-    
+
     const newSelected = selectedQuestions.includes(questionId)
       ? selectedQuestions.filter(id => id !== questionId)
       : [...selectedQuestions, questionId];
-    
+
     setSelectedQuestions(newSelected);
-    
+
     if (onSelectQuestions) {
       const selectedQuestionObjects = questions ? questions.filter(q => newSelected.includes(q.id)) : [];
       onSelectQuestions(selectedQuestionObjects);
@@ -415,7 +487,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
 
     } catch (error: unknown) {
       console.error('Failed to add question:', error);
-      
+
       const errorMsg = error instanceof Error ? error.message : String(error);
       let errorTitle = 'Error';
       let errorMessage = 'Failed to add question';
@@ -439,12 +511,12 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
     } finally {
       setIsCreating(false);
     }
-  }, [newQuestion, createQuestion, defaultQuestion,router]);
+  }, [newQuestion, createQuestion, defaultQuestion]);
 
   // ✅ UPDATED: Edit question handler for dialog
   const handleEditQuestion = useCallback(async () => {
     if (!editingQuestion) return;
-    
+
     // Console
     console.log('from QB editingQuestion', editingQuestion)
     console.log('from QB editingQuestion', editingQuestion)
@@ -461,7 +533,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
       });
     } catch (error: unknown) {
       console.error('Failed to update question:', error);
-      
+
       const errorMsg = error instanceof Error ? error.message : String(error);
       toast({
         title: 'Error',
@@ -471,7 +543,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
     } finally {
       setIsUpdating(false);
     }
-  }, [editingQuestion,questionsAPI]);
+  }, [editingQuestion, questionsAPI]);
 
   const handleDeleteQuestion = useCallback(async (id: string) => {
     try {
@@ -482,7 +554,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
       });
     } catch (error: unknown) {
       console.error('Failed to delete question:', error);
-      
+
       const errorMsg = error instanceof Error ? error.message : String(error);
       toast({
         title: 'Error',
@@ -496,7 +568,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
     try {
       const text = await file.text();
       const questionsData = JSON.parse(text);
-      
+
       if (!Array.isArray(questionsData)) {
         throw new Error('File must contain an array of questions');
       }
@@ -524,11 +596,11 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
           description: `${successful} questions uploaded successfully`
         });
       }
-      
+
       setShowBulkUpload(false);
     } catch (error: unknown) {
       console.error('Failed to upload questions:', error);
-      
+
       const errorMsg = error instanceof Error ? error.message : String(error);
       toast({
         title: 'Upload Error',
@@ -540,13 +612,21 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
 
   // Computed values
   const activeFilterCount = useMemo(() => {
-    const storeFilters = [filters.difficulty, filters.subject, filters.topic]
+    const localFilterCount = [localFilters.difficulty, localFilters.subject, localFilters.topic]
       .filter(value => value && value.trim() !== '')?.length;
-    const tagFilters = selectedTags?.length;
-    return storeFilters + tagFilters;
-  }, [filters.difficulty, filters.subject, filters.topic, selectedTags?.length]);
+    const searchCount = searchQuery ? 1 : 0;
+    const tagFilters = selectedTags?.length || 0;
+    return localFilterCount + searchCount + tagFilters;
+  }, [localFilters, searchQuery, selectedTags?.length]);
 
-  const displayQuestions = tagFilteredQuestions;
+  // Use questions from API response for display (server-side pagination and filtering)
+  const displayQuestions = useMemo(() => {
+    // No client-side filtering needed - everything is done server-side
+    return questions || [];
+  }, [questions]);
+
+  // Get pagination info from API response
+  const paginationInfo = questionApiResponse?.data?.pagination;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -554,27 +634,32 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
       <QuestionBankHeader
         // Navigation
         onBack={onBack}
-        
+
         // Search
         searchText={searchText}
         isSearching={isSearching}
         onSearchChange={handleSearchChange}
-        
+
         // View controls
         viewMode={viewMode}
         onViewModeChange={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-        
+
         // Filters
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         activeFilterCount={activeFilterCount}
-        filters={filters}
+        filters={{
+          subject: localFilters.subject,
+          topic: localFilters.topic,
+          difficulty: localFilters.difficulty,
+          search: searchQuery
+        }}
         onFilterChange={handleFilterChange}
         onClearFilters={clearFilters}
-        
+
         // Filter data
         derivedData={derivedData}
-        
+
         // Tag filtering
         selectedTags={selectedTags}
         tagSearchTerm={tagSearchTerm}
@@ -583,101 +668,131 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
         onRemoveTag={removeTag}
         onClearAllTags={clearAllTags}
         onTagSearchChange={setTagSearchTerm}
-        
+
         // Actions
         onAddQuestion={() => setShowAddQuestion(true)}
         onBulkUpload={() => setShowBulkUpload(true)}
-        
+
         // Statistics
-        displayQuestionsCount={displayQuestions?.length}
+        displayQuestionsCount={paginationInfo?.totalItems || displayQuestions?.length}
       />
-      
+
       {/* Main content */}
-      <div className="flex-1 p-4 bg-gray-100 overflow-auto">
-        {/* Loading state */}
-        {isLoading && <LoadingSpinner />}
-        
-        {/* Error state */}
-        {error && !isLoading && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Error loading questions</AlertTitle>
-            <AlertDescription>
-              {error}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => fetchQuestions()}
-                className="mt-2 w-full cursor-pointer"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Retry
-              </Button>
-            </AlertDescription>
-          </Alert>
+      <div className="flex-1 bg-gray-100 overflow-auto">
+        {/* Pagination - Top */}
+        {!isLoading && !error && paginationInfo && paginationInfo.totalItems > 0 && (
+          <Pagination
+            currentPage={paginationInfo.currentPage}
+            totalPages={paginationInfo.totalPages}
+            totalItems={paginationInfo.totalItems}
+            itemsPerPage={paginationInfo.itemsPerPage}
+            hasNextPage={paginationInfo.hasNextPage}
+            hasPrevPage={paginationInfo.hasPrevPage}
+            onPageChange={handlePageChange}
+            isLoading={isLoadingPage}
+          />
         )}
-        
-        {/* Empty state */}
-        {!isLoading && !error && displayQuestions?.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-64 text-center p-4">
-            <div className="rounded-full bg-gray-100 p-3 mb-4">
-              <BookOpen className="h-6 w-6 text-gray-400" />
+
+        <div className="p-4">
+          {/* Loading state */}
+          {(isLoading || isLoadingPage) && <LoadingSpinner />}
+
+          {/* Error state */}
+          {error && !isLoading && !isLoadingPage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Error loading questions</AlertTitle>
+              <AlertDescription>
+                {error}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchQuestions()}
+                  className="mt-2 w-full cursor-pointer"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Empty state */}
+          {!isLoading && !isLoadingPage && !error && displayQuestions?.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+              <div className="rounded-full bg-gray-100 p-3 mb-4">
+                <BookOpen className="h-6 w-6 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium mb-1">No questions found</h3>
+              <p className="text-gray-500 mb-4 max-w-md">
+                {questions?.length === 0
+                  ? "Your question bank is empty. Add questions to get started."
+                  : activeFilterCount > 0
+                    ? "No questions match your current filters. Try adjusting your search, filters, or selected tags."
+                    : "No questions match your current filters. Try adjusting your search or filters."}
+              </p>
+              {questions?.length === 0 ? (
+                <Button onClick={() => setShowAddQuestion(true)} className="cursor-pointer">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Question
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={clearFilters} className="cursor-pointer">
+                  Clear All Filters
+                </Button>
+              )}
             </div>
-            <h3 className="text-lg font-medium mb-1">No questions found</h3>
-            <p className="text-gray-500 mb-4 max-w-md">
-              {questions?.length === 0
-                ? "Your question bank is empty. Add questions to get started."
-                : activeFilterCount > 0
-                ? "No questions match your current filters. Try adjusting your search, filters, or selected tags."
-                : "No questions match your current filters. Try adjusting your search or filters."}
-            </p>
-            {questions?.length === 0 ? (
-              <Button onClick={() => setShowAddQuestion(true)} className="cursor-pointer">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Question
-              </Button>
-            ) : (
-              <Button variant="outline" onClick={clearFilters} className="cursor-pointer">
-                Clear All Filters
-              </Button>
-            )}
-          </div>
-        )}
-        
-        {/* Questions grid/list */}
-        {!isLoading && !error && displayQuestions.length > 0 && (
-          <div className={viewMode === 'grid' 
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" 
-            : "space-y-4"
-          }>
-            {displayQuestions?.map(question => (
-              <QuestionCard
-                key={question.id}
-                question={question}
-                isSelected={selectedQuestions.includes(question.id)}
-                multiSelect={multiSelect}
-                selectedTags={selectedTags}
-                onToggleSelection={toggleSelection}
-                onPreview={setPreviewQuestion}
-                onEdit={setEditingQuestion}
-                onDelete={handleDeleteQuestion}
-                onToggleTag={toggleTag}
-                getDifficultyColor={getDifficultyColor}
-                renderQuestionContent={renderQuestionContent}
-              />
-            ))}
-          </div>
+          )}
+
+          {/* Questions grid/list */}
+          {!isLoading && !isLoadingPage && !error && displayQuestions.length > 0 && (
+            <div className={viewMode === 'grid'
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              : "space-y-4"
+            }>
+              {displayQuestions?.map(question => (
+                <QuestionCard
+                  key={question.id}
+                  question={question}
+                  isSelected={selectedQuestions.includes(question.id)}
+                  multiSelect={multiSelect}
+                  selectedTags={selectedTags}
+                  onToggleSelection={toggleSelection}
+                  onPreview={setPreviewQuestion}
+                  onEdit={setEditingQuestion}
+                  onDelete={handleDeleteQuestion}
+                  onToggleTag={toggleTag}
+                  getDifficultyColor={getDifficultyColor}
+                  renderQuestionContent={renderQuestionContent}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Pagination - Bottom */}
+        {!isLoading && !isLoadingPage && !error && paginationInfo && paginationInfo.totalItems > 0 && (
+          <Pagination
+            currentPage={paginationInfo.currentPage}
+            totalPages={paginationInfo.totalPages}
+            totalItems={paginationInfo.totalItems}
+            itemsPerPage={paginationInfo.itemsPerPage}
+            hasNextPage={paginationInfo.hasNextPage}
+            hasPrevPage={paginationInfo.hasPrevPage}
+            onPageChange={handlePageChange}
+            isLoading={isLoadingPage}
+          />
         )}
       </div>
-      
+
       {/* Question Preview Dialog */}
       <QuestionPreviewDialog
         previewQuestion={previewQuestion}
         setPreviewQuestion={setPreviewQuestion}
         getDifficultyColor={getDifficultyColor}
       />
-      
+
       {/* ✅ NEW: Using separate dialog components */}
-      
+
       {/* Add Question Dialog */}
       <AddQuestionDialog
         isOpen={showAddQuestion}
@@ -687,7 +802,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
         onSubmit={handleAddQuestion}
         isSubmitting={isCreating}
       />
-      
+
       {/* Edit Question Dialog */}
       <EditQuestionDialog
         question={editingQuestion}
@@ -696,7 +811,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
         onSubmit={handleEditQuestion}
         isSubmitting={isUpdating}
       />
-      
+
       {/* Enhanced Bulk Upload Dialog */}
       <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
         <DialogContent>
@@ -706,7 +821,7 @@ export const QuestionBankContainer: React.FC<QuestionBankContainerProps> = ({
               Upload multiple questions at once using JSON format. The file will be validated before upload.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="mt-4">
             <BulkUploadForm onUpload={handleBulkUpload} />
           </div>

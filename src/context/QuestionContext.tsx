@@ -7,6 +7,7 @@ interface QueryParams {
     page?: number;
     limit?: number;
     subject?: string;
+    topic?: string;
     difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
     search?: string;
     tags?: string[];
@@ -15,10 +16,18 @@ interface QueryParams {
     sortOrder?: 'asc' | 'desc';
 }
 
+interface FilterOptions {
+    subjects: string[];
+    topics: string[];
+    difficulties: string[];
+    tags: string[];
+}
+
 type QuestionContextType = {
     questions: Question[] | null;
     setQuestions: React.Dispatch<React.SetStateAction<Question[] | null>>;
     fetchQuestionData: (params?: QueryParams) => Promise<void>;
+    fetchFilterOptions: () => Promise<FilterOptions>;
     setQuestionApiResponse: React.Dispatch<React.SetStateAction<QuestionsListApiResponse | null>>;
     questionApiResponse: QuestionsListApiResponse | null;
     loading: boolean;
@@ -74,6 +83,40 @@ export function QuestionContextProvider({children}: {children: React.ReactNode})
             setLoading(false);
         }
     }, []); // ✅ Empty dependency array since the function doesn't depend on any props/state
+
+    // Fetch all available filter options (not paginated)
+    const fetchFilterOptions = useCallback(async (): Promise<FilterOptions> => {
+        try {
+            const url = new URL('/api/questions/filters', window.location.origin);
+            
+            console.log('🌐 Context fetching filter options from:', url.toString());
+
+            const response = await fetch(url.toString(), {
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            if (data.success) {
+                console.log('✅ Context filter options fetched successfully');
+                return data.data;
+            } else {
+                throw new Error(data.error || 'Failed to fetch filter options');
+            }
+        } catch (error) {
+            console.error("❌ Context filter options error:", error);
+            // Return empty arrays as fallback
+            return {
+                subjects: [],
+                topics: [],
+                difficulties: ['EASY', 'MEDIUM', 'HARD'],
+                tags: []
+            };
+        }
+    }, []);
 
     // ✅ FIXED: Memoize the context value to prevent unnecessary re-renders
     const contextValue = useMemo(() => ({

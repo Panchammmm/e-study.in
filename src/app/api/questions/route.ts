@@ -13,6 +13,7 @@ const querySchema = z.object({
   page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1),
   limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 20),
   subject: z.string().optional(),
+  topic: z.string().optional(), // ✅ NEW: Added topic parameter
   difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).optional(),
   search: z.string().optional(),
   tags: z.string().optional(),
@@ -34,9 +35,9 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const queryParams = Object.fromEntries(searchParams.entries());
-    
+
     const parsedQuery = querySchema.safeParse(queryParams);
-    
+
     if (!parsedQuery.success) {
       return NextResponse.json(
         { error: 'Invalid query parameters', details: parsedQuery.error.issues },
@@ -44,7 +45,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const { page, limit, subject, difficulty, search, tags, authorId, sortBy, sortOrder } = parsedQuery.data;
+    const { page, limit, subject, topic, difficulty, search, tags, authorId, sortBy, sortOrder } = parsedQuery.data;
 
     // Validate pagination limits
     if (page < 1 || limit < 1 || limit > 100) {
@@ -57,6 +58,7 @@ export async function GET(request: Request) {
     // Build where clause for filtering
     const where: {
       subject?: { contains: string; mode: 'insensitive' };
+      topic?: { contains: string; mode: 'insensitive' }; // ✅ NEW: Added topic filter
       difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
       authorId?: string;
       OR?: Array<{
@@ -77,6 +79,10 @@ export async function GET(request: Request) {
       where.subject = { contains: subject, mode: 'insensitive' };
     }
 
+    if (topic) {
+      where.topic = { contains: topic, mode: 'insensitive' };
+    }
+
     if (difficulty) {
       where.difficulty = difficulty;
     }
@@ -92,16 +98,16 @@ export async function GET(request: Request) {
         { subject: { contains: search, mode: 'insensitive' } },
         { topic: { contains: search, mode: 'insensitive' } },
         { tags: { hasSome: [search] } },
-        
+
         // Layer 1
         { layer1Text: { contains: search, mode: 'insensitive' } },
-        
+
         // Layer 2
         { layer2Text: { contains: search, mode: 'insensitive' } },
-        
+
         // Layer 3
         { layer3Text: { contains: search, mode: 'insensitive' } },
-        
+
         // Options and Explanation
         { options: { hasSome: [search] } },
         { explanationText: { contains: search, mode: 'insensitive' } },
@@ -121,7 +127,8 @@ export async function GET(request: Request) {
     orderBy[sortBy] = sortOrder;
 
     // Execute queries in parallel for better performance
-    const [questions, totalCount] = await Promise.all([
+    const [questions, totalCount, filterMetadata] = await Promise.all([
+      // Get paginated questions
       prisma.question.findMany({
         where,
         skip: offset,
@@ -143,7 +150,47 @@ export async function GET(request: Request) {
           },
         },
       }),
+      // Get total count for pagination
       prisma.question.count({ where }),
+      // ✅ NEW: Get complete filter metadata for dropdowns
+      Promise.all([
+        // Get all unique subjects
+        prisma.question.findMany({
+          select: { subject: true },
+          distinct: ['subject']
+        }).then(results =>
+          results
+            .map(r => r.subject)
+            .filter(subject => subject && subject.trim() !== '')
+            .sort()
+        ),
+
+        // Get all unique topics
+        prisma.question.findMany({
+          select: { topic: true },
+          distinct: ['topic']
+        }).then(results =>
+          results
+            .map(r => r.topic)
+            .filter(topic => topic && topic.trim() !== '')
+            .sort()
+        ),
+
+        // Get all unique tags
+        prisma.question.findMany({
+          select: { tags: true }
+        }).then(results => {
+          const allTags = results.flatMap(r => r.tags || []);
+          return [...new Set(allTags)]
+            .filter(tag => tag && tag.trim() !== '')
+            .sort();
+        })
+      ]).then(([subjects, topics, tags]) => ({
+        subjects,
+        topics,
+        difficulties: ['EASY', 'MEDIUM', 'HARD'] as const,
+        tags
+      }))
     ]);
 
     // Calculate pagination metadata
@@ -165,6 +212,7 @@ export async function GET(request: Request) {
         },
         filters: {
           subject,
+          topic, // ✅ NEW: Include topic in response filters
           difficulty,
           search,
           tags: tags ? tags.split(',').map(tag => tag.trim()) : undefined,
@@ -174,6 +222,8 @@ export async function GET(request: Request) {
           sortBy,
           sortOrder,
         },
+        // ✅ NEW: Complete filter metadata for consistent dropdown options
+        filterMetadata,
       },
     });
   } catch (error) {

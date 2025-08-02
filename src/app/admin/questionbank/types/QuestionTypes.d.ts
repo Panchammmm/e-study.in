@@ -63,11 +63,19 @@ interface Sorting {
   sortOrder: 'asc' | 'desc';
 }
 
+interface FilterMetadata {
+  subjects: string[];
+  topics: string[];
+  difficulties: string[];
+  tags: string[];
+}
+
 interface QuestionsListData {
   questions: Question[];
   pagination: Pagination;
-  filters: Record<string, any>; // Can be more specific based on your filter structure
+  filters: Record<string, unknown>; // Can be more specific based on your filter structure
   sorting: Sorting;
+  filterMetadata: FilterMetadata; // ✅ NEW: Complete filter options
 }
 
 export interface QuestionsListApiResponse {

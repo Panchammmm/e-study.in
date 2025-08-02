@@ -29,7 +29,7 @@ import {
   Zap
 } from 'lucide-react';
 import { Question } from '@/constants/types';
-import MathDisplay from '../../../../components/math-display';
+import SafeMathDisplay from '../../../../components/SafeMathDisplay';
 
 interface QuestionCardProps {
   question: Question;
@@ -302,7 +302,7 @@ export const QuestionCard = memo<QuestionCardProps>(({
 
                     {optionType === 'text' ? (
                       option ? (
-                        <MathDisplay className="text-sm mt-2">{option}</MathDisplay>
+                        <SafeMathDisplay className="text-sm mt-2">{option}</SafeMathDisplay>
                       ) : (
                         <span className="text-gray-400 italic mt-2 block">No text</span>
                       )

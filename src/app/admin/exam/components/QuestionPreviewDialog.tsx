@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CheckCircle } from 'lucide-react';
 import { Question } from '@/constants/types';
-import MathDisplay from '../../../../components/math-display';
+import SafeMathDisplay from '../../../../components/SafeMathDisplay';
 
 interface QuestionPreviewDialogProps {
   previewQuestion: Question | null;
@@ -46,10 +46,10 @@ const QuestionPreviewDialog: React.FC<QuestionPreviewDialogProps> = ({
     imageUrl?: string,
     idx?: number
   ) => {
-    if (type === "text" && text) {
+    if (type === "text" && text && typeof text === 'string' && text.trim()) {
       return (
         <div key={`layer-text-${idx}`} className="rounded break-words">
-          <MathDisplay>{text}</MathDisplay>
+          <SafeMathDisplay>{text}</SafeMathDisplay>
         </div>
       );
     }
@@ -90,13 +90,15 @@ const QuestionPreviewDialog: React.FC<QuestionPreviewDialogProps> = ({
 
     if (
       previewQuestion.explanationType === "text" &&
-      previewQuestion.explanationText
+      previewQuestion.explanationText &&
+      typeof previewQuestion.explanationText === 'string' &&
+      previewQuestion.explanationText.trim()
     ) {
       return (
         <div className="p-3 border rounded bg-blue-50 border-blue-200">
-          <MathDisplay className="text-sm">
-            {previewQuestion.explanationText}
-          </MathDisplay>
+          <div className="text-sm">
+            <SafeMathDisplay>{previewQuestion.explanationText}</SafeMathDisplay>
+          </div>
         </div>
       );
     }
@@ -200,7 +202,7 @@ const QuestionPreviewDialog: React.FC<QuestionPreviewDialogProps> = ({
                       <div className="flex-1 min-w-0">
                         {optionType === "text" ? (
                           <div className="break-words">
-                            <MathDisplay>{option}</MathDisplay>
+                            <SafeMathDisplay>{option}</SafeMathDisplay>
                           </div>
                         ) : optionType === "image" && optionImage ? (
                           <div className="flex justify-start">
