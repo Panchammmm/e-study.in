@@ -64,7 +64,7 @@ export interface ExamsSectionProps {
   availableExams: Exam[];
   completedExams: Exam[];
   userStats: DashboardStats; // This already contains recentSubmissions
-  onStartExam: (examId: string) => void;
+  onStartExam: (id: string, password?: string) => void;
   onViewResults: (examId: string) => void;
 }
 
@@ -73,7 +73,7 @@ export interface ExamCardProps {
   exam: Exam;
   submission?: Submission;
   isCompleted: boolean;
-  onStartExam: (examId: string) => void;
+  onStartExam: (id: string, password?: string) => void;
   onViewResults: (examId: string) => void;
 }
 
@@ -111,7 +111,7 @@ export interface ExamListProps {
   exams: Exam[];
   submissionsMap?: Map<string, Submission>;
   isCompleted: boolean;
-  onStartExam: (id: string) => void;
+  onStartExam: (id: string, password?: string) => void;
   onViewResults: (id: string) => void;
 }
 

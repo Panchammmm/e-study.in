@@ -114,7 +114,13 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
         }
 
         const users = await usersResponse.json();
-        const foundUser = users.find((u: User) => u.id === resolvedParams.userId);
+
+        // Sort users by createdAt (latest first)
+        const sortedUsers = users.sort(
+          (a: User, b: User) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        const foundUser = sortedUsers.find((u: User) => u.id === resolvedParams.userId);
 
         if (!foundUser) {
           throw new Error('User not found');

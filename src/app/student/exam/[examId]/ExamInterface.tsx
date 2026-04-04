@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { 
   LoadingSpinner,
   ExamHeader,
-  PasswordModal,
+  // PasswordModal,
   BreakModal,
   SubmitDialog,
   QuestionCard,
@@ -545,7 +545,7 @@ useEffect(() => {
         PASSWORD MODAL
         Shows when exam requires password for access
       */}
-      <PasswordModal
+      {/* <PasswordModal
         isOpen={uiState.showPasswordModal}
         password={uiState.password}
         passwordError={uiState.passwordError}
@@ -554,7 +554,7 @@ useEffect(() => {
         onTogglePasswordVisibility={() => setUiState(prev => ({ ...prev, showPassword: !prev.showPassword }))}
         onSubmit={examActions.handlePasswordSubmit}
         onClose={() => {}} // Prevent closing without password
-      />
+      /> */}
 
       {/* 
         BREAK MODAL
