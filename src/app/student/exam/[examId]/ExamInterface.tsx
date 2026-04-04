@@ -540,26 +540,7 @@ useEffect(() => {
         getTimeColor={getTimeColorForState}
         formatTime={formatTimeForState}
       />
-
-      {/* 
-        PASSWORD MODAL
-        Shows when exam requires password for access
-      */}
-      {/* <PasswordModal
-        isOpen={uiState.showPasswordModal}
-        password={uiState.password}
-        passwordError={uiState.passwordError}
-        showPassword={uiState.showPassword}
-        onPasswordChange={(password) => setUiState(prev => ({ ...prev, password }))}
-        onTogglePasswordVisibility={() => setUiState(prev => ({ ...prev, showPassword: !prev.showPassword }))}
-        onSubmit={examActions.handlePasswordSubmit}
-        onClose={() => {}} // Prevent closing without password
-      /> */}
-
-      {/* 
-        BREAK MODAL
-        Shows when user takes a break during exam
-      */}
+      
       <BreakModal
         isOpen={uiState.showBreakModal}
         timeLeft={timerState.timeLeft}

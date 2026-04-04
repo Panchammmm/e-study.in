@@ -39,7 +39,6 @@ const StartExamDialog: React.FC<StartExamDialogProps> = memo(({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Reset state when dialog opens
   useEffect(() => {
     if (isOpen) {
       setPassword("");
@@ -66,34 +65,50 @@ const StartExamDialog: React.FC<StartExamDialogProps> = memo(({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-lg bg-white border shadow-md">
+      <DialogContent
+        className="
+          w-full 
+          max-w-lg 
+          sm:rounded-lg 
+          rounded-none
+          h-[100vh] sm:h-auto
+          overflow-y-auto
+          bg-white border shadow-md
+          p-4 sm:p-6
+        "
+      >
 
         {/* Header */}
-        <DialogHeader className="border-b pb-4">
-          <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+        <DialogHeader className="border-b pb-3 sm:pb-4">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg font-semibold">
             <BookOpen className="h-5 w-5 text-slate-500" />
             Start Exam
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-500">
+          <DialogDescription className="text-xs sm:text-sm text-slate-500">
             Review details before starting
           </DialogDescription>
         </DialogHeader>
 
         {/* Content */}
-        <div className="py-4 space-y-5 text-sm">
+        <div className="py-4 space-y-4 sm:space-y-5 text-sm">
 
           {/* Exam Info */}
           <div>
-            <h3 className="font-medium text-slate-800 mb-2">{exam.name}</h3>
-            <div className="flex flex-wrap gap-4 text-slate-600">
+            <h3 className="font-medium text-slate-800 mb-2 break-words">
+              {exam.name}
+            </h3>
+
+            <div className="flex flex-wrap gap-3 sm:gap-4 text-slate-600 text-xs sm:text-sm">
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
                 {exam.timeLimit} min
               </div>
+
               <div className="flex items-center gap-1">
                 <Target className="h-4 w-4" />
                 {exam.totalMarks} marks
               </div>
+
               {exam.questionsCount && (
                 <div className="flex items-center gap-1">
                   <FileText className="h-4 w-4" />
@@ -105,12 +120,15 @@ const StartExamDialog: React.FC<StartExamDialogProps> = memo(({
 
           {/* Instructor Instructions */}
           {exam.instructions && exam.instructions.trim() && (
-            <div className="bg-gray-50 rounded-lg p-4 border">
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border">
               <div className="flex items-center gap-2 mb-2">
                 <User className="h-4 w-4 text-gray-600" />
-                <h4 className="font-medium text-gray-800">Instructions</h4>
+                <h4 className="font-medium text-gray-800 text-sm">
+                  Instructions
+                </h4>
               </div>
-              <p className="text-gray-700 whitespace-pre-wrap text-sm">
+
+              <p className="text-gray-700 whitespace-pre-wrap text-xs sm:text-sm leading-relaxed">
                 {exam.instructions}
               </p>
             </div>
@@ -118,42 +136,46 @@ const StartExamDialog: React.FC<StartExamDialogProps> = memo(({
 
           {/* Guidelines */}
           <div>
-            <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-2">
+            <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-2 text-sm">
               <Shield className="h-4 w-4" />
               Guidelines
             </h4>
-            <ul className="space-y-1 text-slate-600">
+
+            <ul className="space-y-1 text-slate-600 text-xs sm:text-sm">
               {systemInstructions.map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-slate-400 mt-0.5" />
-                  {item}
+                  <CheckCircle2 className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* 🔐 Password Input */}
+          {/* Password */}
           {exam.isPasswordProtected && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-amber-700 text-sm">
+              <div className="flex items-center gap-2 text-amber-700 text-xs sm:text-sm">
                 <AlertTriangle className="h-4 w-4" />
                 Password required
               </div>
 
-              <Label>Password</Label>
+              <Label className="text-xs sm:text-sm">Password</Label>
+
               <div className="relative">
                 <Input
+                  className="pr-10"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder="Enter exam password"
                 />
+
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -169,12 +191,19 @@ const StartExamDialog: React.FC<StartExamDialogProps> = memo(({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 border-t pt-4">
-          <Button variant="outline" className="flex-1" onClick={onClose}>
+        <div className="flex flex-col sm:flex-row gap-2 border-t pt-4">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={onClose}
+          >
             Cancel
           </Button>
 
-          <Button className="flex-1" onClick={handleStart}>
+          <Button
+            className="w-full"
+            onClick={handleStart}
+          >
             <Play className="h-4 w-4 mr-2" />
             Start Exam
           </Button>
