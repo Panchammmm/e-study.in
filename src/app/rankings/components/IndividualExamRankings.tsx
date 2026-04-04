@@ -66,7 +66,7 @@ export default function IndividualExamRankings() {
             const data = await response.json();
 
             if (data.success) {
-                setRankings(data.data.top5 || []);
+                setRankings(data.data.rankings || []);
                 // Add totalParticipants from root level to personalRank
                 const personalRankData = data.data.personalRank ? {
                     ...data.data.personalRank,
@@ -134,8 +134,8 @@ export default function IndividualExamRankings() {
                         Exam Rankings
                     </h3>
                     <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                        <span className="hidden sm:inline">Top 5 performers + your personal rank</span>
-                        <span className="sm:hidden">Top 5 + your rank</span>
+                        <span className="hidden sm:inline">All candidates ranking</span>
+                        <span className="sm:hidden">All candidates ranking</span>
                     </p>
                 </div>
 
@@ -186,10 +186,10 @@ export default function IndividualExamRankings() {
                 <div className="space-y-4">
                     {/* Top 5 Rankings */}
                     <div className="space-y-3 sm:space-y-4">
-                        <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                        {/* <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                             <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600 flex-shrink-0" />
                             Top 5 Performers
-                        </h4>
+                        </h4> */}
                         
                         {rankings.length === 0 ? (
                             <Card className="bg-gray-50 border-gray-200">
@@ -278,7 +278,7 @@ export default function IndividualExamRankings() {
                                                     </div>
 
                                                     {/* Stats Grid */}
-                                                    <div className="grid grid-cols-3 gap-3 mb-3">
+                                                    <div className="grid grid-cols-3 gap-3 mb-3 items-center">
                                                         <div className="text-center">
                                                             <div className="font-semibold text-gray-900 text-sm sm:text-base">
                                                                 {ranking.score}
@@ -297,18 +297,15 @@ export default function IndividualExamRankings() {
                                                                     {new Date(ranking.completedAt).toLocaleDateString()}
                                                                 </span>
                                                                 <span className="sm:hidden">
-                                                                    {new Date(ranking.completedAt).toLocaleDateString('en-US', { 
-                                                                        month: 'short', 
-                                                                        day: 'numeric' 
-                                                                    })}
+                                                                    {new Date(ranking.completedAt).toLocaleDateString()}
                                                                 </span>
                                                             </div>
-                                                            {ranking.timeTaken && (
+                                                            {/* {ranking.timeTaken && (
                                                                 <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-1">
                                                                     <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                                                     {Math.round(ranking.timeTaken / 60)}m
                                                                 </div>
-                                                            )}
+                                                            )} */}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -382,12 +379,12 @@ export default function IndividualExamRankings() {
                                                                 <Calendar className="h-3 w-3" />
                                                                 {new Date(ranking.completedAt).toLocaleDateString()}
                                                             </div>
-                                                            {ranking.timeTaken && (
+                                                            {/* {ranking.timeTaken && (
                                                                 <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-1">
                                                                     <Clock className="h-3 w-3" />
                                                                     {Math.round(ranking.timeTaken / 60)}m
                                                                 </div>
-                                                            )}
+                                                            )} */}
                                                         </div>
                                                     </div>
                                                 </div>
