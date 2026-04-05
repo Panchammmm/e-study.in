@@ -94,11 +94,23 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Compute rank dynamically (IMPORTANT FIX)
-    const rankingsWithRank = rawRankings.map((r, index) => ({
-      ...r,
-      rank: index + 1
-    }));
+    // Compute rank dynamically (Shows joint ranks)
+    let currentRank = 1;
+
+    const rankingsWithRank = rawRankings.map((r, index, arr) => {
+      if (index === 0) {
+        return { ...r, rank: 1 };
+      }
+
+      if (r.score === arr[index - 1].score) {
+        // same score → same rank
+        return { ...r, rank: currentRank };
+      } else {
+        // increase rank by 1 ONLY (no skipping)
+        currentRank += 1;
+        return { ...r, rank: currentRank };
+      }
+    });
 
     // Format rankings (ALL users)
     const allRankings = rankingsWithRank.map(ranking => ({

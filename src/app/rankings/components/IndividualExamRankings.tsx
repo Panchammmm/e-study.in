@@ -320,7 +320,12 @@ export default function IndividualExamRankings() {
                                                                     getMedalIcon(ranking.rank)
                                                                 ) : (
                                                                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                                                                        <span className="text-sm font-semibold text-gray-600">{ranking.rank}</span>
+                                                                        <span className="text-sm font-semibold text-gray-600">
+                                                                            {ranking.rank}
+                                                                            {rankings.filter(r => r.rank === ranking.rank).length > 1 && (
+                                                                                <span className="ml-1 text-xs text-gray-400">(Tied)</span>
+                                                                            )}
+                                                                        </span>
                                                                     </div>
                                                                 )}
                                                             </div>
